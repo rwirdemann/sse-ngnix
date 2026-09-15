@@ -263,7 +263,7 @@ sequenceDiagram
         N->>C: proxy_pass GET /confirmations (keeps connection open)
         activate C
     and background job in backend
-        Note right of S: goroutine sleeps 5s
+        Note right of S: process and apply settings update
     end
 
     rect rgb(234, 245, 244)
