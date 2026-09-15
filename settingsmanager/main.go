@@ -1,7 +1,7 @@
-// Command server implements a minimal JSON echo backend for the
-// nginx reverse proxy demo. It accepts a JSON payload via POST,
-// responds immediately, and reports completion of a simulated
-// background job by calling back through nginx.
+// Command server implements a minimal JSON echo settings manager
+// for the nginx reverse proxy demo. It accepts a JSON payload via
+// POST, responds immediately, and reports completion of a
+// simulated background job by calling back through nginx.
 package main
 
 import (
@@ -12,8 +12,8 @@ import (
 	"time"
 )
 
-// confirmationURL is the nginx endpoint the backend calls once a
-// submitted job has finished processing.
+// confirmationURL is the nginx endpoint settingsmanager calls once
+// a submitted job has finished processing.
 const confirmationURL = "http://127.0.0.1:8080/confirmations"
 
 // backgroundJobDuration simulates the time a submitted job takes
@@ -87,7 +87,7 @@ func main() {
 	http.HandleFunc("/submit", submitHandler)
 
 	addr := "127.0.0.1:9000"
-	log.Printf("go backend listening on %s", addr)
+	log.Printf("settingsmanager listening on %s", addr)
 	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}

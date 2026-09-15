@@ -6,21 +6,21 @@ Proxy an einen lokalen Go-Service weitergeleitet wird.
 ## Architektur
 
 ```
-Browser    --GET /------------------> nginx :8080 --> static/index.html
-Browser    --POST /api/submit-------> nginx :8080 --> backend :9000/submit
-Browser    --GET /confirmations-----> nginx :8080 --> confirmations :9001 (haelt Verbindung offen)
-backend    --POST /confirmations----> nginx :8080 --> confirmations :9001 (fuellt offenen Stream)
+Browser          --GET /------------------> nginx :8080 --> static/index.html
+Browser          --POST /api/submit-------> nginx :8080 --> settingsmanager :9000/submit
+Browser          --GET /confirmations-----> nginx :8080 --> confirmations :9001 (haelt Verbindung offen)
+settingsmanager  --POST /confirmations----> nginx :8080 --> confirmations :9001 (fuellt offenen Stream)
 ```
 
-Der `backend`-Service antwortet auf `/submit` sofort mit
+Der `settingsmanager`-Service antwortet auf `/submit` sofort mit
 `{"status":"received", ...}` und simuliert danach 5 Sekunden
 Hintergrundarbeit. Parallel dazu öffnet der Browser per
 `EventSource` eine `GET /confirmations`-Verbindung; der
-`confirmations`-Service hält sie offen, bis `backend` seinen
-Abschluss per `POST /confirmations` meldet — erst dann schreibt
-`confirmations` das Ergebnis als `text/event-stream` in genau
-diese Verbindung zurück. Beide Go-Services sind eigenständige
-Module und lauschen nur auf localhost.
+`confirmations`-Service hält sie offen, bis `settingsmanager`
+seinen Abschluss per `POST /confirmations` meldet — erst dann
+schreibt `confirmations` das Ergebnis als `text/event-stream` in
+genau diese Verbindung zurück. Beide Go-Services sind
+eigenständige Module und lauschen nur auf localhost.
 
 Sequenzdiagramm des Ablaufs:
 
@@ -33,10 +33,10 @@ Sequenzdiagramm des Ablaufs:
 
 ## Starten
 
-1. Backend-Service starten:
+1. Settingsmanager-Service starten:
 
    ```
-   cd backend && go run main.go
+   cd settingsmanager && go run main.go
    ```
 
    Lauscht auf `127.0.0.1:9000`.
@@ -60,8 +60,8 @@ Sequenzdiagramm des Ablaufs:
 4. Seite öffnen: http://127.0.0.1:8080
 
    JSON ins Textfeld eingeben und "Senden" klicken. Die
-   sofortige Antwort des Backends erscheint darunter; nach 5
-   Sekunden meldet das Backend den Abschluss beim
+   sofortige Antwort des Settingsmanagers erscheint darunter;
+   nach 5 Sekunden meldet der Settingsmanager den Abschluss beim
    Confirmations-Service (sichtbar in dessen Logausgabe).
 
 ## Stoppen

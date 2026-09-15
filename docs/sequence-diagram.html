@@ -126,7 +126,7 @@
 
   .dot.browser { background: var(--text-dim); }
   .dot.nginx { background: var(--accent); }
-  .dot.backend { background: var(--accent-2); }
+  .dot.settingsmanager { background: var(--accent-2); }
   .dot.confirmations { background: #c084fc; }
 
   figure {
@@ -230,7 +230,7 @@
     <span class="chip"><span class="dot browser"></span>Browser</span>
     <span class="chip"><span class="dot nginx"></span>nginx
       <span class="mono">:8080</span></span>
-    <span class="chip"><span class="dot backend"></span>backend
+    <span class="chip"><span class="dot settingsmanager"></span>settingsmanager
       <span class="mono">:9000</span></span>
     <span class="chip"><span class="dot confirmations"></span>confirmations
       <span class="mono">:9001</span></span>
@@ -244,7 +244,7 @@ sequenceDiagram
     autonumber
     participant B as Browser
     participant N as nginx :8080
-    participant S as backend :9000
+    participant S as settingsmanager :9000
     participant C as confirmations :9001
 
     B->>N: GET /
@@ -262,7 +262,7 @@ sequenceDiagram
         B->>N: GET /confirmations (keeps connection open)
         N->>C: proxy_pass GET /confirmations (keeps connection open)
         activate C
-    and background job in backend
+    and background job in settingsmanager
         Note right of S: process and apply settings update
     end
 
@@ -278,7 +278,8 @@ sequenceDiagram
     </div>
     <figcaption>
       The browser keeps the GET connection open; only the
-      later-arriving POST callback from backend fills the stream.
+      later-arriving POST callback from settingsmanager fills the
+      stream.
     </figcaption>
   </figure>
 
@@ -289,9 +290,9 @@ sequenceDiagram
         nginx serves <code>static/index.html</code>. Clicking
         "Senden" sends the JSON from the textarea via
         <code>POST /api/submit</code>; nginx passes it straight
-        through to <code>backend:9000/submit</code>, which replies
-        with <code>{"status":"received"}</code> — before anything
-        has happened in the background yet.
+        through to <code>settingsmanager:9000/submit</code>, which
+        replies with <code>{"status":"received"}</code> — before
+        anything has happened in the background yet.
       </p>
     </div>
     <div class="phase">
@@ -300,8 +301,9 @@ sequenceDiagram
         In parallel, the browser opens
         <code>GET /confirmations</code> and keeps the connection
         open. <code>confirmations</code> lets it hang until
-        <code>backend</code> calls <code>POST /confirmations</code>
-        itself after 5s — only then does
+        <code>settingsmanager</code> calls
+        <code>POST /confirmations</code> itself after 5s — only
+        then does
         <code>confirmations</code> write the result as
         <code>text/event-stream</code> into that very same open
         connection back to the browser.

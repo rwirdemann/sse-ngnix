@@ -3,7 +3,7 @@ sequenceDiagram
     autonumber
     participant B as Browser
     participant N as nginx :8080
-    participant S as backend :9000
+    participant S as settingsmanager :9000
     participant C as confirmations :9001
 
     B->>N: GET /
@@ -21,7 +21,7 @@ sequenceDiagram
         B->>N: GET /confirmations (keeps connection open)
         N->>C: proxy_pass GET /confirmations (keeps connection open)
         activate C
-    and background job in backend
+    and background job in settingsmanager
         Note right of S: process and apply settings update
     end
 

@@ -1,8 +1,9 @@
 // Command confirmations implements a small service that bridges
 // completed background jobs to waiting browsers. A client opens a
-// long-lived GET /confirmations connection through nginx; once the
-// backend POSTs the job result to the same path, that result is
-// written into the open connection as a server-sent event.
+// long-lived GET /confirmations connection through nginx; once
+// settingsmanager POSTs the job result to the same path, that
+// result is written into the open connection as a server-sent
+// event.
 package main
 
 import (
