@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>JSON Submit Demo</title>
+<style>
+  body {
+    font-family: system-ui, sans-serif;
+    max-width: 640px;
+    margin: 3rem auto;
+    padding: 0 1rem;
+  }
+  textarea {
+    width: 100%;
+    height: 200px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+  }
+  button {
+    margin-top: 0.75rem;
+    padding: 0.5rem 1.25rem;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  pre {
+    background: #f4f4f4;
+    padding: 1rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .error {
+    color: #b00020;
+  }
+</style>
+</head>
+<body>
+  <h1>JSON an Go-Backend senden</h1>
+  <textarea id="payload" placeholder='{"key": "value"}'></textarea>
+  <br>
+  <button id="send">Senden</button>
+  <h2>Antwort</h2>
+  <pre id="result">–</pre>
+  <h2>Bestätigung</h2>
+  <pre id="confirmation">–</pre>
+
+  <script>
+    const textarea = document.getElementById('payload');
+    const result = document.getElementById('result');
+    const confirmation = document.getElementById('confirmation');
+    let stream = null;
+
+    document.getElementById('send').addEventListener('click', async () => {
+      result.textContent = '…';
+      result.classList.remove('error');
+      confirmation.textContent = '–';
+      confirmation.classList.remove('error');
+      if (stream) stream.close();
+
+      let body;
+      try {
+        body = JSON.parse(textarea.value);
+      } catch (e) {
+        result.textContent = 'Ungültiges JSON: ' + e.message;
+        result.classList.add('error');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const text = await res.text();
+        result.textContent = res.status + ' ' + res.statusText + '\n' + text;
+        if (!res.ok) {
+          result.classList.add('error');
+          return;
+        }
+      } catch (e) {
+        result.textContent = 'Request fehlgeschlagen: ' + e.message;
+        result.classList.add('error');
+        return;
+      }
+
+      confirmation.textContent = 'warte auf Bestätigung …';
+      stream = new EventSource('/confirmations');
+      stream.onmessage = (event) => {
+        confirmation.textContent = event.data;
+        stream.close();
+      };
+      stream.onerror = () => {
+        confirmation.textContent = 'Stream-Verbindung verloren';
+        confirmation.classList.add('error');
+        stream.close();
+      };
+    });
+  </script>
+</body>
+</html>
