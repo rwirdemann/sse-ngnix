@@ -22,9 +22,9 @@ Abschluss per `POST /confirmations` meldet — erst dann schreibt
 diese Verbindung zurück. Beide Go-Services sind eigenständige
 Module und lauschen nur auf localhost.
 
-Ein Sequenzdiagramm des Ablaufs liegt in
-[`docs/sequence-diagram.html`](docs/sequence-diagram.html) (im
-Browser öffnen).
+Sequenzdiagramm des Ablaufs:
+
+![Sequenzdiagramm](docs/sequence-diagram.png)
 
 ## Voraussetzungen
 

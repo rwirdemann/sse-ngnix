@@ -1,0 +1,33 @@
+%%{init: {'theme': 'neutral', 'sequence': {'boxMargin': 10, 'messageMargin': 40, 'noteMargin': 15, 'bottomMarginAdj': 15}} }%%
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant N as nginx :8080
+    participant S as backend :9000
+    participant C as confirmations :9001
+
+    B->>N: GET /
+    N-->>B: static/index.html
+
+    rect rgb(234, 245, 244)
+    Note over B,N: Phase 1 — synchronous
+    B->>N: POST /api/submit  { json }
+    N->>S: proxy_pass POST /submit
+    S-->>N: 200 { "status": "accepted" }
+    N-->>B: 200 { "status": "accepted" }
+    end
+
+    par open SSE stream
+        B->>N: GET /confirmations (keeps connection open)
+        N->>C: proxy_pass GET /confirmations (keeps connection open)
+        activate C
+    and background job in backend
+        Note right of S: goroutine sleeps 5s
+    end
+
+    Note over S,C: Phase 2 — write result into stream
+    S->>N: POST /confirmations { "status": "completed" }
+    N->>C: proxy_pass POST /confirmations
+    C-->>N: data: { "status": "completed" }
+    deactivate C
+    N-->>B: data: { "status": "completed" }
