@@ -13,7 +13,7 @@ backend    --POST /confirmations----> nginx :8080 --> confirmations :9001 (fuell
 ```
 
 Der `backend`-Service antwortet auf `/submit` sofort mit
-`{"status":"accepted", ...}` und simuliert danach 5 Sekunden
+`{"status":"received", ...}` und simuliert danach 5 Sekunden
 Hintergrundarbeit. Parallel dazu öffnet der Browser per
 `EventSource` eine `GET /confirmations`-Verbindung; der
 `confirmations`-Service hält sie offen, bis `backend` seinen

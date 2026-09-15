@@ -13,8 +13,8 @@ sequenceDiagram
     Note over B,N: Phase 1 — synchronous
     B->>N: POST /api/submit  { json }
     N->>S: proxy_pass POST /submit
-    S-->>N: 200 { "status": "accepted" }
-    N-->>B: 200 { "status": "accepted" }
+    S-->>N: 200 { "status": "received" }
+    N-->>B: 200 { "status": "received" }
     end
 
     par open SSE stream
@@ -26,8 +26,8 @@ sequenceDiagram
     end
 
     Note over S,C: Phase 2 — write result into stream
-    S->>N: POST /confirmations { "status": "completed" }
+    S->>N: POST /confirmations { "status": "applied" }
     N->>C: proxy_pass POST /confirmations
-    C-->>N: data: { "status": "completed" }
+    C-->>N: data: { "status": "applied" }
     deactivate C
-    N-->>B: data: { "status": "completed" }
+    N-->>B: data: { "status": "applied" }

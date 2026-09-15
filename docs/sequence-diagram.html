@@ -254,8 +254,8 @@ sequenceDiagram
     Note over B,N: Phase 1 — synchronous
     B->>N: POST /api/submit  { json }
     N->>S: proxy_pass POST /submit
-    S-->>N: 200 { "status": "accepted" }
-    N-->>B: 200 { "status": "accepted" }
+    S-->>N: 200 { "status": "received" }
+    N-->>B: 200 { "status": "received" }
     end
 
     par open SSE stream
@@ -268,11 +268,11 @@ sequenceDiagram
 
     rect rgb(234, 245, 244)
     Note over S,C: Phase 2 — write result into the open stream
-    S->>N: POST /confirmations { "status": "completed" }
+    S->>N: POST /confirmations { "status": "applied" }
     N->>C: proxy_pass POST /confirmations
-    C-->>N: data: { "status": "completed" }
+    C-->>N: data: { "status": "applied" }
     deactivate C
-    N-->>B: data: { "status": "completed" }
+    N-->>B: data: { "status": "applied" }
     end
       </pre>
     </div>
@@ -290,7 +290,7 @@ sequenceDiagram
         "Senden" sends the JSON from the textarea via
         <code>POST /api/submit</code>; nginx passes it straight
         through to <code>backend:9000/submit</code>, which replies
-        with <code>{"status":"accepted"}</code> — before anything
+        with <code>{"status":"received"}</code> — before anything
         has happened in the background yet.
       </p>
     </div>

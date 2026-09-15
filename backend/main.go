@@ -21,7 +21,7 @@ const confirmationURL = "http://127.0.0.1:8080/confirmations"
 const backgroundJobDuration = 5 * time.Second
 
 // submitHandler handles POST requests containing a JSON body. It
-// validates the payload, responds immediately with an "accepted"
+// validates the payload, responds immediately with a "received"
 // status, and starts a simulated background job that reports its
 // result to confirmationURL once finished. Any method other than
 // POST results in a 405 response.
@@ -40,7 +40,7 @@ func submitHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]interface{}{
-		"status":   "accepted",
+		"status":   "received",
 		"received": payload,
 	}
 
@@ -59,7 +59,7 @@ func runBackgroundJob(payload interface{}) {
 	time.Sleep(backgroundJobDuration)
 
 	confirmation := map[string]interface{}{
-		"status":  "completed",
+		"status":  "applied",
 		"payload": payload,
 	}
 
