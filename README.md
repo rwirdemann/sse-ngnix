@@ -1,30 +1,42 @@
 # sse-ngnix
 
-Statische Seite (nginx) mit Textfeld für JSON, das per Reverse
-Proxy an einen lokalen Go-Service weitergeleitet wird.
+Statische Seite (nginx) mit Formular für eine `ServiceConfig`, die
+als Protobuf-Binärnachricht per Reverse Proxy an einen lokalen
+Go-Service weitergeleitet wird.
 
 ## Architektur
 
 ```
-Browser          --GET /------------------> nginx :8080 --> static/index.html
-Browser          --POST /api/submit-------> nginx :8080 --> settingsmanager :9000/submit
-Browser          --GET /confirmations-----> nginx :8080 --> confirmations :9001 (haelt Verbindung offen)
-settingsmanager  --POST /confirmations----> nginx :8080 --> confirmations :9001 (fuellt offenen Stream)
+Browser  --GET /------------------> nginx :8080 --> static/index.html
+Browser  --POST /config/update----> nginx :8080 --> settingsmanager :9000/config/update
 ```
 
-Der `settingsmanager`-Service antwortet auf `/submit` sofort mit
-`{"status":"received", ...}` und simuliert danach 5 Sekunden
-Hintergrundarbeit. Parallel dazu öffnet der Browser per
-`EventSource` eine `GET /confirmations`-Verbindung; der
-`confirmations`-Service hält sie offen, bis `settingsmanager`
-seinen Abschluss per `POST /confirmations` meldet — erst dann
-schreibt `confirmations` das Ergebnis als `text/event-stream` in
-genau diese Verbindung zurück. Beide Go-Services sind
-eigenständige Module und lauschen nur auf localhost.
+Sämtliche Nutzdaten sind Protobuf-Nachrichten aus
+[`proto/messages.proto`](proto/messages.proto): der Browser
+schickt eine `modbus_messages.ServiceConfig` (mit einer `modbus_messages.ModbusConfig` im
+`details`-Feld, gepackt als `google.protobuf.Any`) binär an
+`/config/update`. Der `settingsmanager`-Service verarbeitet sie
+synchron und antwortet direkt mit einer
+`modbus_messages.Confirmation{status: received}`. Der Browser dekodiert die
+Antwort mit [protobuf.js](https://github.com/protobufjs/protobuf.js),
+das die `.proto`-Datei zur Laufzeit über `/proto/messages.proto`
+lädt.
 
-Sequenzdiagramm des Ablaufs:
+## Protobuf-Typen neu generieren
 
-![Sequenzdiagramm](docs/sequence-diagram.png)
+Nach Änderungen an `proto/messages.proto`:
+
+```
+cd proto
+protoc --proto_path=. --proto_path=<protobuf-include-dir> \
+  --go_out=. --go_opt=module=sse-ngnix/proto messages.proto
+```
+
+`<protobuf-include-dir>` ist der `include`-Ordner der
+protobuf-Installation (z. B. via `brew install protobuf`), der die
+Well-known-Types wie `google/protobuf/any.proto` enthält.
+Voraussetzung: `protoc` und `protoc-gen-go`
+(`brew install protobuf protoc-gen-go`).
 
 ## Voraussetzungen
 
@@ -41,15 +53,7 @@ Sequenzdiagramm des Ablaufs:
 
    Lauscht auf `127.0.0.1:9000`.
 
-2. Confirmations-Service starten:
-
-   ```
-   cd confirmations && go run main.go
-   ```
-
-   Lauscht auf `127.0.0.1:9001`.
-
-3. nginx mit der Projekt-Config starten:
+2. nginx mit der Projekt-Config starten:
 
    ```
    nginx -p $(pwd) -c nginx/nginx.conf
@@ -57,12 +61,12 @@ Sequenzdiagramm des Ablaufs:
 
    Lauscht auf `127.0.0.1:8080`.
 
-4. Seite öffnen: http://127.0.0.1:8080
+3. Seite öffnen: http://127.0.0.1:8080
 
-   JSON ins Textfeld eingeben und "Senden" klicken. Die
-   sofortige Antwort des Settingsmanagers erscheint darunter;
-   nach 5 Sekunden meldet der Settingsmanager den Abschluss beim
-   Confirmations-Service (sichtbar in dessen Logausgabe).
+   JSON-Eingabe im Textfeld anpassen und "Senden" klicken. Die
+   Seite wandelt die Eingabe im Browser in eine
+   `modbus_messages.ServiceConfig`-Protobuf-Nachricht um, schickt sie binär und
+   zeigt die dekodierte `Confirmation`-Antwort direkt darunter an.
 
 ## Stoppen
 
@@ -70,4 +74,4 @@ Sequenzdiagramm des Ablaufs:
 nginx -p $(pwd) -c nginx/nginx.conf -s stop
 ```
 
-Beide Go-Services mit Ctrl-C beenden.
+Settingsmanager mit Ctrl-C beenden.

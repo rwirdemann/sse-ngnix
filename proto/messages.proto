@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package modbus_messages;
+
+option go_package = "sse-ngnix/proto/pb";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+
+message ServiceConfig {
+  google.protobuf.Timestamp createdAt = 1;
+  string transaction_id = 2;
+  string service_name = 3;
+  repeated string neonpulse_ids = 4;
+  google.protobuf.Any details = 5;
+}
+
+message ModbusConfig {
+  string transaction_id = 1; // copied from parent message since modbus app needs this id to create status file
+  string neonpulse_id = 2;   // copied from parent message since modbus app needs this id to create status file
+  string kontext = 3;
+  repeated Serial serials = 4;
+}
+
+message Serial {
+  string url = 1;
+  int32 timeout = 2;
+  int32 baud = 3;
+  int32 data_bits = 4;
+  string parity = 5;
+  int32 stop_bits = 6;
+  repeated Slave slaves = 7;
+}
+
+message Slave {
+  int32 address = 1;
+  int32 name = 2;
+  string fw_version = 3;
+  string type = 4;                      // DSL to use
+  string hardware_maker = 5;            // defaults to ""
+  string hardware_model = 6;            // defaults to ""
+  string spannungsebene_teilanlage = 7;
+  bool rebirth = 8;
+  int32 scan_rate = 9;
+  int32 leittechnikkomponente = 10;
+}
+
+enum Status {
+  received = 0;
+  applied = 1;
+  error = 2;
+  discarded = 3;
+}
+
+message Confirmation {
+  google.protobuf.Timestamp createdAt = 1;
+  string transaction_id = 2;
+  string service_name = 3;
+  string neonpulse_id = 4;
+  Status status = 5;
+  string info = 6;
+}
