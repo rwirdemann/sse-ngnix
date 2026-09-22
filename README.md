@@ -33,14 +33,27 @@ protoc --proto_path=. --proto_path=<protobuf-include-dir> \
 ```
 
 `<protobuf-include-dir>` ist der `include`-Ordner der
-protobuf-Installation (z. B. via `brew install protobuf`), der die
-Well-known-Types wie `google/protobuf/any.proto` enthält.
-Voraussetzung: `protoc` und `protoc-gen-go`
-(`brew install protobuf protoc-gen-go`).
+protobuf-Installation, der die Well-known-Types wie
+`google/protobuf/any.proto` enthält:
+
+- macOS: `brew install protobuf` (Include-Ordner z. B. via
+  `brew --prefix protobuf`)
+- Arch/Omarchy: `sudo pacman -S protobuf` (Include-Ordner
+  `/usr/include`)
+
+Voraussetzung ist außerdem `protoc-gen-go`:
+
+```
+go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+```
+
+(landet in `$(go env GOPATH)/bin`, muss im `PATH` liegen)
 
 ## Voraussetzungen
 
-- nginx (`brew install nginx`) — bereits installiert
+- nginx
+  - macOS: `brew install nginx`
+  - Arch/Omarchy: `sudo pacman -S nginx`
 - Go >= 1.26
 
 ## Starten
@@ -56,10 +69,15 @@ Voraussetzung: `protoc` und `protoc-gen-go`
 2. nginx mit der Projekt-Config starten:
 
    ```
+   mkdir -p logs/tmp
    nginx -p $(pwd) -c nginx/nginx.conf
    ```
 
-   Lauscht auf `127.0.0.1:8080`.
+   Lauscht auf `127.0.0.1:8080`. `logs/tmp` muss vorher existieren,
+   da `nginx.conf` dort projektlokale Temp-Verzeichnisse anlegt
+   (Distro-Pakete wie unter Arch/Omarchy verwenden sonst
+   `/var/lib/nginx` bzw. `/var/log/nginx`, die ohne root nicht
+   beschreibbar sind).
 
 3. Seite öffnen: http://127.0.0.1:8080
 

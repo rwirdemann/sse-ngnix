@@ -4,6 +4,7 @@
 # nginx runtime output
 logs/*.log
 logs/*.pid
+logs/tmp/
 
 # Go build artifacts
 /settingsmanager/settingsmanager
