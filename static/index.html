@@ -108,7 +108,7 @@
       const bytes = Type.encode(message).finish();
       const Any = root.lookupType('google.protobuf.Any');
       return Any.create({
-        typeUrl: 'type.googleapis.com/' + typeName,
+        type_url: 'type.googleapis.com/' + typeName,
         value: bytes,
       });
     }
