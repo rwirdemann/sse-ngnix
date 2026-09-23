@@ -1,0 +1,309 @@
+<title>Request Flow — sse-ngnix</title>
+<style>
+  :root {
+    --bg: #f4f6f6;
+    --surface: #ffffff;
+    --surface-2: #eaf0ef;
+    --border: #d8e2e1;
+    --text: #142120;
+    --text-dim: #55696a;
+    --accent: #0f766e;
+    --accent-2: #0369a1;
+    --accent-soft: rgba(15, 118, 110, 0.10);
+    --paper: #fffffe;
+    --paper-line: rgba(20, 40, 40, 0.06);
+    --shadow: 0 1px 2px rgba(20, 40, 38, 0.06), 0 8px 24px rgba(20, 40, 38, 0.05);
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0d1413;
+    --surface: #121a19;
+    --surface-2: #17201f;
+    --border: #223130;
+    --text: #e6efee;
+    --text-dim: #93aaa9;
+    --accent: #2dd4bf;
+    --accent-2: #38bdf8;
+    --accent-soft: rgba(45, 212, 191, 0.14);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px rgba(0, 0, 0, 0.35);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1413;
+      --surface: #121a19;
+      --surface-2: #17201f;
+      --border: #223130;
+      --text: #e6efee;
+      --text-dim: #93aaa9;
+      --accent: #2dd4bf;
+      --accent-2: #38bdf8;
+      --accent-soft: rgba(45, 212, 191, 0.14);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
+      Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 3.5rem 1.5rem 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2.25rem;
+  }
+
+  header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .eyebrow {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 1.85rem;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .dek {
+    margin: 0;
+    max-width: 62ch;
+    color: var(--text-dim);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  code, .mono {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+      monospace;
+    font-size: 0.85em;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 0.83rem;
+    box-shadow: var(--shadow);
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex: none;
+  }
+
+  .dot.browser { background: var(--text-dim); }
+  .dot.nginx { background: var(--accent); }
+  .dot.settingsmanager { background: var(--accent-2); }
+
+  figure {
+    margin: 0;
+  }
+
+  .sheet {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    padding: 1.75rem 1.25rem 1.25rem;
+    overflow-x: auto;
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .sheet pre.mermaid {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    min-width: 640px;
+  }
+
+  figcaption {
+    margin-top: 0.6rem;
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  .phases {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+
+  @media (max-width: 640px) {
+    .phases { grid-template-columns: 1fr; }
+  }
+
+  .phase {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .phase h2 {
+    margin: 0;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .phase h2 .tag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border-radius: 5px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .phase p {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-dim);
+  }
+
+  footer {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+  }
+</style>
+
+<div class="page">
+  <header>
+    <div class="eyebrow">Local Architecture</div>
+    <h1>How a submit becomes a confirmation</h1>
+    <p class="dek">
+      Two processes and a protobuf-encoded request-response cycle:
+      the browser submits a config, gets an immediate
+      <code>received</code> confirmation, then polls a status
+      endpoint until settingsmanager has applied it 5 seconds
+      later — all wired locally through nginx as a reverse proxy.
+    </p>
+  </header>
+
+  <div class="legend">
+    <span class="chip"><span class="dot browser"></span>Browser</span>
+    <span class="chip"><span class="dot nginx"></span>nginx
+      <span class="mono">:8080</span></span>
+    <span class="chip"><span class="dot settingsmanager"></span>settingsmanager
+      <span class="mono">:9000</span></span>
+  </div>
+
+  <figure>
+    <div class="sheet">
+      <pre class="mermaid">
+%%{init: {'theme': 'neutral'} }%%
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant N as nginx :8080
+    participant S as settingsmanager :9000
+
+    B->>N: GET /
+    N-->>B: static/index.html
+
+    rect rgb(234, 245, 244)
+    Note over B,N: Phase 1 — submit config
+    B->>N: POST /config/update  (ServiceConfig, protobuf)
+    N->>S: proxy_pass POST /config/update
+    Note right of S: register transaction as "received"
+    S-->>N: 200 Confirmation{status: received}
+    N-->>B: 200 Confirmation{status: received}
+    end
+
+    Note right of S: after 5s, transaction<br/>transitions to "applied"
+
+    rect rgb(234, 245, 244)
+    Note over B,N: Phase 2 — poll for the result
+    loop poll while status == "received"
+        B->>N: GET /config/confirmations/{transactionId}
+        N->>S: proxy_pass GET /config/confirmations/{transactionId}
+        S-->>N: 200 Confirmation{status}
+        N-->>B: 200 Confirmation{status}
+    end
+    end
+      </pre>
+    </div>
+    <figcaption>
+      The browser polls on a fixed interval; it stops as soon as a
+      response comes back with status other than "received".
+    </figcaption>
+  </figure>
+
+  <div class="phases">
+    <div class="phase">
+      <h2><span class="tag">Phase 1</span>Immediate response</h2>
+      <p>
+        nginx serves <code>static/index.html</code>. Clicking
+        "Send" encodes the form as a
+        <code>modbus_messages.ServiceConfig</code> protobuf message
+        and posts it binary to <code>POST /config/update</code>;
+        nginx passes it straight through to
+        <code>settingsmanager:9000</code>, which registers the
+        transaction and replies immediately with
+        <code>Confirmation{status: received}</code>.
+      </p>
+    </div>
+    <div class="phase">
+      <h2><span class="tag">Phase 2</span>Result via polling</h2>
+      <p>
+        The browser then polls
+        <code>GET /config/confirmations/{transactionId}</code>
+        once a second. <code>settingsmanager</code> flips the
+        transaction to <code>applied</code> 5 seconds after
+        submission; the next poll response carries that status and
+        the browser stops polling.
+      </p>
+    </div>
+  </div>
+
+  <footer>
+    sse-ngnix · nginx :8080 is the only public entry point,
+    settingsmanager listens exclusively on 127.0.0.1.
+  </footer>
+</div>

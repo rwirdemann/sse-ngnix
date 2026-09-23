@@ -1,0 +1,29 @@
+%%{init: {'theme': 'neutral', 'sequence': {'boxMargin': 10, 'messageMargin': 40, 'noteMargin': 15, 'bottomMarginAdj': 15}} }%%
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant N as nginx :8080
+    participant S as settingsmanager :9000
+
+    B->>N: GET /
+    N-->>B: static/index.html
+
+    rect rgb(234, 245, 244)
+    Note over B,N: Phase 1 — submit config
+    B->>N: POST /config/update  (ServiceConfig, protobuf)
+    N->>S: proxy_pass POST /config/update
+    Note right of S: register transaction as "received"
+    S-->>N: 200 Confirmation{status: received}
+    N-->>B: 200 Confirmation{status: received}
+    end
+
+    Note right of S: after 5s, transaction<br/>transitions to "applied"
+
+    loop poll while status == "received"
+        B->>N: GET /config/confirmations/{transactionId}
+        N->>S: proxy_pass GET /config/confirmations/{transactionId}
+        S-->>N: 200 Confirmation{status}
+        N-->>B: 200 Confirmation{status}
+    end
+
+    Note over B,N: last poll returns status: applied — polling stops
