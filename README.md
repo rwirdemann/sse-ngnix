@@ -1,4 +1,4 @@
-# sse-ngnix
+# settingsmanager-ngnix
 
 Statische Seite (nginx) mit Formular für eine `ServiceConfig`, die
 als Protobuf-Binärnachricht per Reverse Proxy an einen lokalen
@@ -37,7 +37,7 @@ Nach Änderungen an `proto/messages.proto`:
 ```
 cd proto
 protoc --proto_path=. --proto_path=<protobuf-include-dir> \
-  --go_out=. --go_opt=module=sse-ngnix/proto messages.proto
+  --go_out=. --go_opt=module=settingsmanager-ngnix/proto messages.proto
 ```
 
 `<protobuf-include-dir>` ist der `include`-Ordner der

@@ -14,7 +14,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"sse-ngnix/proto/pb"
+	"settingsmanager-ngnix/proto/pb"
 )
 
 // protobufContentType is the media type used for request and

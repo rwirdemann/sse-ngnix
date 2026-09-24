@@ -1,4 +1,4 @@
-module sse-ngnix/proto
+module settingsmanager-ngnix/proto
 
 go 1.26
 

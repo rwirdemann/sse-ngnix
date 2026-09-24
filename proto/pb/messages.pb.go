@@ -559,7 +559,7 @@ const file_messages_proto_rawDesc = "" +
 	"\breceived\x10\x00\x12\v\n" +
 	"\aapplied\x10\x01\x12\t\n" +
 	"\x05error\x10\x02\x12\r\n" +
-	"\tdiscarded\x10\x03B\x14Z\x12sse-ngnix/proto/pbb\x06proto3"
+	"\tdiscarded\x10\x03B Z\x1esettingsmanager-ngnix/proto/pbb\x06proto3"
 
 var (
 	file_messages_proto_rawDescOnce sync.Once
